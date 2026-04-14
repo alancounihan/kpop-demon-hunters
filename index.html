@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✦ K-Pop Demon Hunters ✦</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--dark:#06000f;--card:#ffffff07;--border:#ffffff14;}
+body{min-height:100vh;height:100vh;background:var(--dark);color:#fff;font-family:'Poppins',sans-serif;overflow:hidden;}
+canvas#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .5s,transform .5s;}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(18px);}
+
+/* ── SELECT ── */
+.logo{font-family:'Cinzel',serif;font-size:2.9rem;font-weight:900;text-align:center;line-height:1.08;
+  background:linear-gradient(135deg,#ff00cc,#aa00ff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.06em;}
+.sub{font-size:.78rem;letter-spacing:.42em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:.45rem;text-align:center;}
+.char-grid{display:flex;gap:1.6rem;margin-top:2rem;}
+.char-card{width:188px;background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;
+  transition:transform .3s,box-shadow .3s,border-color .3s;backdrop-filter:blur(10px);animation:cardIn .55s ease both;}
+.char-card:nth-child(1){animation-delay:.08s}
+.char-card:nth-child(2){animation-delay:.2s}
+.char-card:nth-child(3){animation-delay:.32s}
+@keyframes cardIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.char-card.rumi:hover{transform:translateY(-9px) scale(1.03);border-color:#d500f9;box-shadow:0 22px 55px rgba(170,0,255,.45);}
+.char-card.mira:hover{transform:translateY(-9px) scale(1.03);border-color:#ff6d00;box-shadow:0 22px 55px rgba(255,80,0,.42);}
+.char-card.zoe:hover {transform:translateY(-9px) scale(1.03);border-color:#00e5ff;box-shadow:0 22px 55px rgba(0,200,255,.42);}
+.portrait{display:flex;align-items:center;justify-content:center;height:210px;overflow:hidden;}
+.char-info{padding:.8rem 1rem;border-top:1px solid var(--border);}
+.c-name{font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;letter-spacing:.12em;}
+.c-title{font-size:.65rem;letter-spacing:.22em;text-transform:uppercase;opacity:.5;margin-top:.18rem;}
+.c-desc{font-size:.73rem;opacity:.62;margin-top:.42rem;line-height:1.45;}
+.sel-btn{display:block;width:calc(100% - 1.5rem);margin:.65rem .75rem;padding:.5rem;border:none;border-radius:10px;
+  font-family:'Poppins',sans-serif;font-weight:700;font-size:.76rem;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:.2s;}
+.sel-btn:hover{transform:scale(1.03);filter:brightness(1.1);}
+.rumi .sel-btn{background:linear-gradient(135deg,#8e24aa,#d500f9);color:#fff;}
+.mira .sel-btn{background:linear-gradient(135deg,#d84315,#ff6d00);color:#fff;}
+.zoe  .sel-btn{background:linear-gradient(135deg,#00838f,#00e5ff);color:#111;}
+
+/* ── CUSTOMIZE ── */
+#screen-customize{flex-direction:row;justify-content:center;gap:1.8rem;align-items:center;padding:1rem;}
+.disp-area{display:flex;flex-direction:column;align-items:center;gap:.7rem;flex-shrink:0;}
+.disp-name{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;letter-spacing:.12em;}
+.disp-title{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;opacity:.48;}
+.disp-box{width:248px;height:375px;background:var(--card);border-radius:22px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;backdrop-filter:blur(10px);position:relative;}
+.disp-box::before{content:'';position:absolute;inset:0;border-radius:22px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(170,0,255,.1),transparent 65%);pointer-events:none;}
+#char-svg{width:208px;height:355px;}
+.btn-row{display:flex;gap:.65rem;}
+.back-btn{padding:.48rem 1.2rem;background:transparent;border:1px solid rgba(255,255,255,.22);border-radius:50px;
+  color:rgba(255,255,255,.55);font-family:'Poppins',sans-serif;cursor:pointer;font-size:.78rem;transition:.2s;}
+.back-btn:hover{border-color:rgba(255,255,255,.6);color:#fff;}
+.go-btn{padding:.55rem 1.5rem;border:none;border-radius:50px;font-family:'Poppins',sans-serif;font-weight:700;
+  font-size:.82rem;cursor:pointer;text-transform:uppercase;letter-spacing:.12em;color:#fff;transition:.2s;}
+.go-btn:hover{transform:scale(1.05);filter:brightness(1.15);}
+
+/* ── PANEL ── */
+.panel{width:385px;background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden;backdrop-filter:blur(12px);flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid var(--border);}
+.tab{flex:1;padding:.82rem .35rem;background:transparent;border:none;color:rgba(255,255,255,.42);
+  font-family:'Poppins',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;text-transform:uppercase;
+  letter-spacing:.08em;transition:.2s;position:relative;}
+.tab.on{color:#fff;}
+.tab.on::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:3px;border-radius:3px 3px 0 0;
+  background:linear-gradient(90deg,#ff00cc,#aa00ff);}
+.tcontent{display:none;padding:1.2rem;}
+.tcontent.on{display:block;}
+.opts{display:grid;grid-template-columns:repeat(5,1fr);gap:.48rem;}
+.opt{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:11px;cursor:pointer;
+  transition:.2s;font-size:1.5rem;gap:.12rem;padding:.22rem;}
+.opt .lb{font-size:.5rem;color:rgba(255,255,255,.58);text-align:center;font-family:'Poppins',sans-serif;font-weight:600;}
+.opt:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);transform:scale(1.07);}
+.opt.on{border-color:#ff00cc;background:rgba(255,0,204,.14);box-shadow:0 0 12px rgba(255,0,204,.3);}
+.slbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.42);margin:.95rem 0 .5rem;}
+.swatches{display:flex;gap:.42rem;flex-wrap:wrap;}
+.sw{width:25px;height:25px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.2s;}
+.sw:hover{transform:scale(1.28);}
+.sw.on{border-color:#fff;box-shadow:0 0 9px rgba(255,255,255,.55);}
+
+/* ── FINAL ── */
+#screen-final{text-align:center;gap:.85rem;}
+.final-hd{font-family:'Cinzel',serif;font-size:2.1rem;font-weight:900;
+  background:linear-gradient(135deg,#ff00cc,#aa00ff,#00e5ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:pls 2.2s ease infinite;}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.65}}
+.final-box{width:265px;height:390px;margin:0 auto;background:var(--card);border-radius:22px;
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:0 0 55px rgba(170,0,255,.22);}
+#final-svg{width:240px;height:370px;}
+.final-q{font-size:.92rem;color:rgba(255,255,255,.58);font-style:italic;max-width:380px;padding:0 1rem;line-height:1.55;}
+.again-btn{padding:.72rem 2rem;background:linear-gradient(135deg,#ff00cc,#aa00ff);border:none;border-radius:50px;
+  color:#fff;font-family:'Poppins',sans-serif;font-weight:700;cursor:pointer;font-size:.86rem;
+  letter-spacing:.1em;text-transform:uppercase;transition:.2s;}
+.again-btn:hover{transform:scale(1.06);box-shadow:0 10px 32px rgba(170,0,255,.5);}
+
+@media(max-width:860px){
+  .logo{font-size:1.9rem;}
+  .char-grid{gap:.9rem;}
+  .char-card{width:152px;}
+  #screen-customize{flex-direction:column;overflow-y:auto;padding-top:1.5rem;}
+  .panel{width:96vw;max-width:385px;}
+  .disp-box{width:210px;height:315px;}
+  #char-svg{width:178px;height:300px;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<!-- ══════ SELECT ══════ -->
+<div id="ss" class="screen">
+  <div class="logo">K-POP<br>DEMON HUNTERS</div>
+  <div class="sub">✦ Choose Your Hunter ✦</div>
+  <div class="char-grid" id="cgrid"></div>
+</div>
+
+<!-- ══════ CUSTOMIZE ══════ -->
+<div id="sc" class="screen hidden">
+  <div class="disp-area">
+    <div style="text-align:center">
+      <div class="disp-name" id="dn"></div>
+      <div class="disp-title" id="dt"></div>
+    </div>
+    <div class="disp-box">
+      <svg id="char-svg" viewBox="0 0 200 310" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="btn-row">
+      <button class="back-btn" onclick="goBack()">← Back</button>
+      <button class="go-btn" id="gobtn" onclick="beginHunt()">Begin the Hunt ⚔️</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab on" data-t="outfit" onclick="swTab('outfit')">👗 Outfit</button>
+      <button class="tab" data-t="hair"   onclick="swTab('hair')">💇 Hair</button>
+      <button class="tab" data-t="makeup" onclick="swTab('makeup')">💄 Makeup</button>
+    </div>
+    <div id="t-outfit" class="tcontent on"><div class="opts" id="o-outfit"></div></div>
+    <div id="t-hair"   class="tcontent"><div class="opts" id="o-hair"></div>
+      <div class="slbl">Hair Colour</div><div class="swatches" id="o-colors"></div>
+    </div>
+    <div id="t-makeup" class="tcontent"><div class="opts" id="o-makeup"></div></div>
+  </div>
+</div>
+
+<!-- ══════ FINAL ══════ -->
+<div id="sf" class="screen hidden">
+  <div class="final-hd" id="fhd"></div>
+  <div class="final-box"><svg id="final-svg" viewBox="0 0 200 310" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="final-q" id="fq"></div>
+  <button class="again-btn" onclick="reset()">✦ Play Again ✦</button>
+</div>
+
+<script>
+// ═══════════════════ DATA ═══════════════════
+const CH = {
+  rumi:{name:'RUMI',title:'Shadow Blade',desc:'Cold and calculated. She strikes from the shadows.',
+    skin:'#fde8ef',skinS:'#f9a8c4',eye:'#9c27b0',eyeL:'#e040fb',
+    hair:'#7b1fa2',lip:'#e91e63',theme:'#9c27b0',themeL:'#e040fb',
+    tagline:'"They fear what lurks in the dark… and that is me."',
+    bg:['#25004a','#120028'],weapon:'dagger'},
+  mira:{name:'MIRA',title:'Flame Striker',desc:'Bold and fearless. She charges into the heart of battle.',
+    skin:'#ffe8d0',skinS:'#ffb37a',eye:'#c62828',eyeL:'#ff5722',
+    hair:'#c62828',lip:'#e64a19',theme:'#e64a19',themeL:'#ff8a65',
+    tagline:'"Every demon knows my name — and every demon fears it."',
+    bg:['#3a0800','#1a0400'],weapon:'sword'},
+  zoe:{name:'ZOE',title:'Frost Enchanter',desc:'Mysterious and precise. She commands arcane power.',
+    skin:'#e8f4f8',skinS:'#90caf9',eye:'#006064',eyeL:'#00e5ff',
+    hair:'#004d40',lip:'#0097a7',theme:'#00838f',themeL:'#00e5ff',
+    tagline:'"I speak and the shadows answer. I hunt and demons fall."',
+    bg:['#001525','#000c15'],weapon:'staff'}
+};
+const OUTFITS=[{id:'hunter',n:'Hunter',e:'🗡️'},{id:'idol',n:'K-Pop',e:'⭐'},{id:'street',n:'Street',e:'🎮'},{id:'gothic',n:'Gothic',e:'🖤'},{id:'armor',n:'Armor',e:'⚔️'}];
+const HAIRS=[{id:'long',n:'Long',e:'💫'},{id:'bob',n:'Bob',e:'✂️'},{id:'twintails',n:'Tails',e:'🎀'},{id:'updo',n:'Updo',e:'👑'},{id:'wavy',n:'Wavy',e:'🌊'}];
+const MKPS=[{id:'natural',n:'Natural',e:'🌸'},{id:'glam',n:'Glam',e:'💄'},{id:'gothic',n:'Gothic',e:'🖤'},{id:'smoky',n:'Smoky',e:'✨'},{id:'kpop',n:'K-Pop',e:'🌟'}];
+const HCOLS=[{c:'#4a148c',l:'Deep Purple'},{c:'#b71c1c',l:'Dark Red'},{c:'#004d40',l:'Dark Teal'},
+  {c:'#1a237e',l:'Midnight Blue'},{c:'#e91e63',l:'Hot Pink'},{c:'#ff6f00',l:'Amber'},
+  {c:'#1b5e20',l:'Forest'},{c:'#880e4f',l:'Magenta'},{c:'#01579b',l:'Ocean Blue'},{c:'#311b92',l:'Indigo'},
+  {c:'#ffd600',l:'Gold'},{c:'#eceff1',l:'White'},{c:'#455a64',l:'Slate'},{c:'#bf360c',l:'Burnt Orange'},{c:'#00695c',l:'Teal'}];
+
+let S={char:null,hair:'long',hairColor:null,outfit:'hunter',makeup:'natural'};
+
+// ═══════════════════ INIT ═══════════════════
+window.onload=()=>{initBG();buildSelect();buildUI();};
+
+// ═══════════════════ PARTICLE BG ═══════════════════
+function initBG(){
+  const cv=document.getElementById('bg'),cx=cv.getContext('2d');
+  let W=cv.width=innerWidth,H=cv.height=innerHeight;
+  window.addEventListener('resize',()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;});
+  const stars=Array.from({length:140},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.3,
+    spd:Math.random()*.22+.07,a:Math.random()*.75+.18,t:Math.random()*Math.PI*2}));
+  const orbs=[{x:W*.18,y:H*.28,r:95,col:'rgba(150,0,240,.07)',dx:.3,dy:.2},
+    {x:W*.78,y:H*.62,r:115,col:'rgba(255,0,180,.055)',dx:-.22,dy:.28},
+    {x:W*.5,y:H*.88,r:85,col:'rgba(0,200,255,.06)',dx:.18,dy:-.2}];
+  (function loop(){
+    cx.clearRect(0,0,W,H);
+    const g=cx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.8);
+    g.addColorStop(0,'#0f0022');g.addColorStop(1,'#020008');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    orbs.forEach(o=>{
+      o.x+=o.dx;o.y+=o.dy;
+      if(o.x<-o.r||o.x>W+o.r)o.dx*=-1;if(o.y<-o.r||o.y>H+o.r)o.dy*=-1;
+      const og=cx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      og.addColorStop(0,o.col);og.addColorStop(1,'transparent');
+      cx.fillStyle=og;cx.beginPath();cx.arc(o.x,o.y,o.r,0,Math.PI*2);cx.fill();
+    });
+    stars.forEach(s=>{
+      s.t+=.02;s.y-=s.spd;if(s.y<0){s.y=H;s.x=Math.random()*W;}
+      cx.fillStyle=`rgba(255,255,255,${s.a*(.5+.5*Math.sin(s.t))})`;
+      cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();
+    });
+    requestAnimationFrame(loop);
+  })();
+}
+
+// ═══════════════════ SELECT SCREEN ═══════════════════
+function buildSelect(){
+  const g=document.getElementById('cgrid');
+  Object.entries(CH).forEach(([k,c])=>{
+    const d=document.createElement('div');d.className=`char-card ${k}`;
+    d.innerHTML=`<div class="portrait" style="background:linear-gradient(160deg,${c.bg[0]},${c.bg[1]})">
+      <svg viewBox="0 0 200 220" style="height:195px" xmlns="http://www.w3.org/2000/svg">
+        ${buildSVG(c,'long',c.hair,'hunter','natural',true)}
+      </svg></div>
+    <div class="char-info">
+      <div class="c-name" style="color:${c.themeL}">${c.name}</div>
+      <div class="c-title">${c.title}</div>
+      <div class="c-desc">${c.desc}</div>
+    </div>
+    <button class="sel-btn" onclick="pick('${k}')">Choose ${c.name}</button>`;
+    g.appendChild(d);
+  });
+}
+
+// ═══════════════════ CUSTOMIZE UI ═══════════════════
+function buildUI(){
+  buildOpts('o-outfit',OUTFITS,'outfit');
+  buildOpts('o-hair',HAIRS,'hair');
+  buildOpts('o-makeup',MKPS,'makeup');
+  const sc=document.getElementById('o-colors');
+  HCOLS.forEach(hc=>{
+    const s=document.createElement('div');s.className='sw';s.style.background=hc.c;s.title=hc.l;
+    s.onclick=()=>{S.hairColor=hc.c;document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));s.classList.add('on');refreshChar();};
+    sc.appendChild(s);
+  });
+}
+function buildOpts(cid,arr,key){
+  const el=document.getElementById(cid);
+  arr.forEach(item=>{
+    const btn=document.createElement('button');btn.className='opt';btn.dataset.v=item.id;
+    btn.innerHTML=`<span style="font-size:1.42rem">${item.e}</span><span class="lb">${item.n}</span>`;
+    btn.onclick=()=>{S[key]=item.id;el.querySelectorAll('.opt').forEach(b=>b.classList.toggle('on',b.dataset.v===item.id));refreshChar();};
+    el.appendChild(btn);
+  });
+}
+function swTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.tcontent').forEach(c=>c.classList.remove('on'));
+  document.getElementById(`t-${t}`).classList.add('on');
+}
+
+// ═══════════════════ NAVIGATION ═══════════════════
+function pick(k){
+  S={char:k,hair:'long',hairColor:CH[k].hair,outfit:'hunter',makeup:'natural'};
+  const c=CH[k];
+  document.getElementById('dn').textContent=c.name;document.getElementById('dn').style.color=c.themeL;
+  document.getElementById('dt').textContent=c.title;
+  document.getElementById('gobtn').style.background=`linear-gradient(135deg,${c.theme},${c.themeL})`;
+  document.querySelectorAll('.opt').forEach(b=>{
+    const g=b.closest('.opts').id;
+    const t=g==='o-outfit'?'hunter':g==='o-hair'?'long':'natural';
+    b.classList.toggle('on',b.dataset.v===t);
+  });
+  document.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));
+  refreshChar();show('sc');
+}
+function goBack(){show('ss');}
+function reset(){show('ss');}
+function beginHunt(){
+  const c=CH[S.char];
+  document.getElementById('fhd').textContent=`${c.name} IS READY`;
+  document.getElementById('fq').textContent=c.tagline;
+  document.getElementById('final-svg').innerHTML=buildSVG(c,S.hair,S.hairColor||c.hair,S.outfit,S.makeup,false);
+  show('sf');
+}
+function refreshChar(){
+  const c=CH[S.char];
+  document.getElementById('char-svg').innerHTML=buildSVG(c,S.hair,S.hairColor||c.hair,S.outfit,S.makeup,false);
+}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+
+// ═══════════════════ SVG BUILDER ═══════════════════
+let _uid=0;
+function buildSVG(c,hStyle,hColor,outfit,makeup,preview){
+  const uid=`u${++_uid}`;
+  const hl=ltn(hColor,45),hd=dkn(hColor,25);
+
+  const OC={
+    hunter:{m:'#161630',a:'#7c4dff',s:'#0d0d2b',d:'#b39ddb',accent2:'#4a148c'},
+    idol:  {m:'#e91e63',a:'#ffd740',s:'#880e4f',d:'#fff9c4',accent2:'#f50057'},
+    street:{m:'#263238',a:'#80deea',s:'#1c313a',d:'#e0f7fa',accent2:'#00acc1'},
+    gothic:{m:'#12001e',a:'#aa00ff',s:'#2d0040',d:'#e1bee7',accent2:'#6a0080'},
+    armor: {m:'#37474f',a:'#80cbc4',s:'#1c313a',d:'#cfd8dc',accent2:'#00897b'}
+  }[outfit]||{m:'#161630',a:'#7c4dff',s:'#0d0d2b',d:'#b39ddb',accent2:'#4a148c'};
+
+  const MC={
+    natural:{lid:'rgba(255,200,210,.22)',lip:c.lip,blush:'rgba(255,140,160,.32)',liner:'#0a0014'},
+    glam:  {lid:'rgba(220,180,30,.5)', lip:'#b71c1c',blush:'rgba(240,80,80,.45)',liner:'#0a0014'},
+    gothic:{lid:'rgba(90,0,110,.7)',   lip:'#38006b',blush:'rgba(80,0,100,.2)',  liner:'#1a0025'},
+    smoky: {lid:'rgba(25,25,50,.72)',  lip:'#9e9e9e',blush:'rgba(100,100,115,.2)',liner:'#000'},
+    kpop:  {lid:'rgba(255,80,200,.5)', lip:'#ff4081',blush:'rgba(255,90,200,.5)',liner:'#0a0014'}
+  }[makeup]||{lid:'rgba(255,200,210,.22)',lip:c.lip,blush:'rgba(255,140,160,.32)',liner:'#0a0014'};
+
+  let s=`<defs>
+    <radialGradient id="eg${uid}" cx="35%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="${c.eyeL}"/>
+      <stop offset="55%" stop-color="${c.eye}"/>
+      <stop offset="100%" stop-color="${dkn(c.eye,35)}"/>
+    </radialGradient>
+    <radialGradient id="fg${uid}" cx="50%" cy="25%" r="75%">
+      <stop offset="0%" stop-color="${ltn(c.skin,12)}"/>
+      <stop offset="100%" stop-color="${c.skinS}"/>
+    </radialGradient>
+    <linearGradient id="hg${uid}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${hl}"/>
+      <stop offset="60%" stop-color="${hColor}"/>
+      <stop offset="100%" stop-color="${hd}"/>
+    </linearGradient>
+    <filter id="gw${uid}" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sg${uid}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  s += hairBack(hStyle,hColor,hl,hd,uid);
+  s += drawOutfit(OC,c,outfit,uid);
+  // Neck
+  s += `<rect x="90" y="155" width="20" height="18" rx="3.5" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+  // Head
+  s += `<ellipse cx="100" cy="92" rx="58" ry="63" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1.2"/>`;
+  // Ears
+  s += `<ellipse cx="44" cy="94" rx="8" ry="11" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+  s += `<ellipse cx="156" cy="94" rx="8" ry="11" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+  s += `<ellipse cx="44" cy="94" rx="5" ry="8" fill="${c.skinS}" opacity=".4"/>`;
+  s += `<ellipse cx="156" cy="94" rx="5" ry="8" fill="${c.skinS}" opacity=".4"/>`;
+  // Blush
+  s += `<ellipse cx="66" cy="114" rx="16" ry="8.5" fill="${MC.blush}"/>`;
+  s += `<ellipse cx="134" cy="114" rx="16" ry="8.5" fill="${MC.blush}"/>`;
+  // Eyes
+  s += drawEyes(c,MC,uid);
+  // Brows
+  s += drawBrows(hColor,makeup,MC.liner);
+  // Nose
+  s += `<path d="M97 125 Q100 128 103 125" fill="none" stroke="${c.skinS}" stroke-width="1.8" stroke-linecap="round"/>`;
+  // Lips
+  s += drawLips(MC.lip,makeup);
+  // Makeup FX
+  s += mkFX(MC,makeup);
+  // Hair front
+  s += hairFront(hStyle,hColor,hl,hd,uid);
+  // Weapon + extras
+  s += drawWeapon(c,OC,outfit,uid);
+  return s;
+}
+
+// ─── HAIR BACK ───
+function hairBack(st,col,hl,hd,uid){
+  let h='';
+  if(st==='long'||st==='wavy'){
+    h+=`<rect x="17" y="88" width="38" height="220" rx="19" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<rect x="145" y="88" width="38" height="220" rx="19" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<rect x="20" y="94" width="14" height="195" rx="7" fill="${hl}" opacity=".22"/>`;
+    h+=`<rect x="166" y="94" width="14" height="195" rx="7" fill="${hl}" opacity=".22"/>`;
+    if(st==='wavy'){
+      h+=`<path d="M17 115 Q10 158 18 198 Q11 242 19 278" stroke="${hl}" stroke-width="6" fill="none" opacity=".16" stroke-linecap="round"/>`;
+      h+=`<path d="M183 115 Q190 158 182 198 Q189 242 181 278" stroke="${hl}" stroke-width="6" fill="none" opacity=".16" stroke-linecap="round"/>`;
+    }
+  }else if(st==='bob'){
+    h+=`<rect x="26" y="88" width="36" height="92" rx="18" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<rect x="138" y="88" width="36" height="92" rx="18" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+  }else if(st==='twintails'){
+    h+=`<path d="M26 145 Q12 192 16 240 Q18 262 30 264 Q42 261 46 240 Q50 192 46 145Z" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<path d="M174 145 Q188 192 184 240 Q182 262 170 264 Q158 261 154 240 Q150 192 154 145Z" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<path d="M29 150 Q18 195 22 238" stroke="${hl}" stroke-width="4" fill="none" opacity=".3" stroke-linecap="round"/>`;
+    h+=`<path d="M171 150 Q182 195 178 238" stroke="${hl}" stroke-width="4" fill="none" opacity=".3" stroke-linecap="round"/>`;
+  }else if(st==='updo'){
+    h+=`<rect x="28" y="88" width="32" height="58" rx="16" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<rect x="140" y="88" width="32" height="58" rx="16" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+  }
+  return h;
+}
+
+// ─── HAIR FRONT ───
+function hairFront(st,col,hl,hd,uid){
+  let h='';
+  // Hair cap
+  h+=`<ellipse cx="100" cy="70" rx="60" ry="38" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1.2"/>`;
+
+  if(st==='updo'){
+    // Dramatic bun
+    h+=`<circle cx="100" cy="48" r="30" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1.2"/>`;
+    h+=`<ellipse cx="100" cy="48" rx="26" ry="21" fill="${hl}" opacity=".2"/>`;
+    // Hair pins
+    h+=`<line x1="88" y1="38" x2="83" y2="31" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>`;
+    h+=`<circle cx="83" cy="30" r="3.5" fill="#ffd700"/><circle cx="83" cy="30" r="1.8" fill="#fff8" />`;
+    h+=`<line x1="112" y1="38" x2="117" y2="31" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>`;
+    h+=`<circle cx="117" cy="30" r="3.5" fill="#ffd700"/><circle cx="117" cy="30" r="1.8" fill="#fff8"/>`;
+  }
+  if(st==='twintails'){
+    // Elastic ties
+    h+=`<circle cx="42" cy="140" r="9" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    h+=`<circle cx="158" cy="140" r="9" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1"/>`;
+    // Bows
+    h+=`<path d="M33 134 Q38 127 42 134 Q38 141 33 134Z" fill="#ff4081" stroke="#c2185b" stroke-width=".8"/>`;
+    h+=`<path d="M51 134 Q46 127 42 134 Q46 141 51 134Z" fill="#ff4081" stroke="#c2185b" stroke-width=".8"/>`;
+    h+=`<circle cx="42" cy="134" r="2.8" fill="#ff80ab"/>`;
+    h+=`<path d="M149 134 Q154 127 158 134 Q154 141 149 134Z" fill="#ff4081" stroke="#c2185b" stroke-width=".8"/>`;
+    h+=`<path d="M167 134 Q162 127 158 134 Q162 141 167 134Z" fill="#ff4081" stroke="#c2185b" stroke-width=".8"/>`;
+    h+=`<circle cx="158" cy="134" r="2.8" fill="#ff80ab"/>`;
+  }
+  // Bangs
+  h+=`<path d="M50 80 Q58 114 70 106 Q78 84 90 78 Q100 74 110 78 Q122 84 130 106 Q142 114 150 80 Q140 50 100 48 Q60 50 50 80Z" fill="url(#hg${uid})" stroke="${hd}" stroke-width="1.2"/>`;
+  // Highlight streaks on bangs
+  h+=`<path d="M56 85 Q62 106 67 102" stroke="${hl}" stroke-width="3" fill="none" opacity=".32" stroke-linecap="round"/>`;
+  h+=`<path d="M100 52 Q104 66 106 82" stroke="${hl}" stroke-width="3" fill="none" opacity=".32" stroke-linecap="round"/>`;
+  if(st==='wavy'){
+    h+=`<path d="M50 80 Q44 92 48 100" stroke="${col}" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+    h+=`<path d="M150 80 Q156 92 152 100" stroke="${col}" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+  }
+  // Top shine
+  h+=`<ellipse cx="91" cy="60" rx="19" ry="9" fill="${hl}" opacity=".28" transform="rotate(-22,91,60)"/>`;
+  return h;
+}
+
+// ─── EYES ───
+function drawEyes(c,MC,uid){
+  let e='';
+  [[76,100],[124,100]].forEach(([cx,cy],i)=>{
+    const flip=i===0;
+    // Outline / white
+    e+=`<ellipse cx="${cx}" cy="${cy}" rx="19" ry="17" fill="white" stroke="${MC.liner}" stroke-width="2"/>`;
+    // Iris gradient
+    e+=`<ellipse cx="${cx}" cy="${cy+1}" rx="14" ry="14" fill="url(#eg${uid})"/>`;
+    // Pupil
+    e+=`<circle cx="${cx}" cy="${cy+1}" r="8" fill="#040008"/>`;
+    // Eye shines
+    e+=`<circle cx="${cx+5}" cy="${cy-5}" r="4" fill="white" opacity=".95"/>`;
+    e+=`<circle cx="${cx-4}" cy="${cy+4}" r="2" fill="white" opacity=".55"/>`;
+    // Top lash line
+    e+=`<path d="M${cx-19} ${cy-8} Q${cx} ${cy-14} ${cx+19} ${cy-8}" stroke="${MC.liner}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    // Wing flick
+    if(flip) e+=`<path d="M${cx-19} ${cy-8} Q${cx-24} ${cy-14} ${cx-26} ${cy-18}" stroke="${MC.liner}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    else      e+=`<path d="M${cx+19} ${cy-8} Q${cx+24} ${cy-14} ${cx+26} ${cy-18}" stroke="${MC.liner}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    // Lid shadow
+    e+=`<ellipse cx="${cx}" cy="${cy-9}" rx="15" ry="6" fill="${MC.lid}"/>`;
+    // Lower lash
+    e+=`<path d="M${cx-14} ${cy+9} Q${cx} ${cy+12} ${cx+14} ${cy+9}" stroke="${MC.liner}" stroke-width="1.1" fill="none" opacity=".42"/>`;
+  });
+  return e;
+}
+
+// ─── BROWS ───
+function drawBrows(hColor,makeup,liner){
+  const bc=makeup==='gothic'?'#2a0040':liner;
+  const t=makeup==='glam'||makeup==='gothic'?3:2.2;
+  return `<path d="M63 97 Q73 91 88 94" stroke="${bc}" stroke-width="${t}" fill="none" stroke-linecap="round"/>
+          <path d="M112 94 Q127 91 137 97" stroke="${bc}" stroke-width="${t}" fill="none" stroke-linecap="round"/>`;
+}
+
+// ─── LIPS ───
+function drawLips(lip,makeup){
+  const bold=makeup==='glam'||makeup==='gothic';
+  return `<path d="M87 136 Q93 131 100 133 Q107 131 113 136 Q107 140 100 139 Q93 140 87 136Z" fill="${lip}" stroke="${dkn(lip,20)}" stroke-width=".8"/>
+          <path d="M87 136 Q93 140 100 142 Q107 140 113 136 Q107 148 100 150 Q93 148 87 136Z" fill="${lip}" opacity="${bold?1:.88}" stroke="${dkn(lip,20)}" stroke-width=".8"/>
+          <ellipse cx="100" cy="147" rx="5.5" ry="2" fill="white" opacity=".28"/>
+          <path d="M93 133 Q97 131 100 132 Q103 131 107 133" stroke="white" stroke-width=".7" fill="none" opacity=".38"/>`;
+}
+
+// ─── MAKEUP FX ───
+function mkFX(MC,makeup){
+  let f='';
+  if(makeup==='gothic'||makeup==='smoky'){
+    f+=`<path d="M65 110 Q76 115 90 110" stroke="${MC.liner}" stroke-width="1.5" fill="none" opacity=".6" stroke-linecap="round"/>`;
+    f+=`<path d="M110 110 Q124 115 135 110" stroke="${MC.liner}" stroke-width="1.5" fill="none" opacity=".6" stroke-linecap="round"/>`;
+  }
+  if(makeup==='kpop'){
+    f+=`<ellipse cx="76" cy="96" rx="14" ry="5.5" fill="rgba(255,80,200,.42)"/>`;
+    f+=`<ellipse cx="124" cy="96" rx="14" ry="5.5" fill="rgba(80,220,255,.42)"/>`;
+    f+=`<text x="55" y="97" font-size="9" fill="#ffd740" opacity=".88">✦</text>`;
+    f+=`<text x="136" y="97" font-size="9" fill="#ffd740" opacity=".88">✦</text>`;
+  }
+  if(makeup==='glam'){
+    f+=`<path d="M89 103 Q91 99 96 96" stroke="#ffd700" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+    f+=`<path d="M111 103 Q109 99 104 96" stroke="#ffd700" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+  }
+  return f;
+}
+
+// ─── OUTFIT ───
+function drawOutfit(OC,c,outfit,uid){
+  let o='';const Y=173;
+  switch(outfit){
+    case'hunter':
+      // Main jacket body
+      o+=`<path d="M54 ${Y} Q36 ${Y+14} 34 ${Y+75} L34 ${Y+140} L166 ${Y+140} L166 ${Y+75} Q164 ${Y+14} 146 ${Y} Q132 ${Y-7} 100 ${Y-9} Q68 ${Y-7} 54 ${Y}Z" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.5"/>`;
+      // Lapels/collar
+      o+=`<path d="M87 ${Y-2} L78 ${Y+28} L56 ${Y+8}" fill="${OC.s}" stroke="${OC.s}" stroke-width="1"/>`;
+      o+=`<path d="M113 ${Y-2} L122 ${Y+28} L144 ${Y+8}" fill="${OC.s}" stroke="${OC.s}" stroke-width="1"/>`;
+      // Belt
+      o+=`<rect x="34" y="${Y+84}" width="132" height="14" rx="4" fill="${OC.s}" stroke="${OC.accent2}" stroke-width="1"/>`;
+      o+=`<rect x="92" y="${Y+82}" width="16" height="18" rx="3.5" fill="${OC.a}" opacity=".9"/>`;
+      o+=`<rect x="95" y="${Y+85}" width="10" height="3" rx="1.5" fill="white" opacity=".5"/>`;
+      // Shoulder plates
+      o+=`<ellipse cx="40" cy="${Y+22}" rx="17" ry="10" fill="${OC.s}" stroke="${OC.accent2}" stroke-width="1" transform="rotate(-15,40,${Y+22})"/>`;
+      o+=`<ellipse cx="160" cy="${Y+22}" rx="17" ry="10" fill="${OC.s}" stroke="${OC.accent2}" stroke-width="1" transform="rotate(15,160,${Y+22})"/>`;
+      // Chest stripe
+      o+=`<line x1="100" y1="${Y}" x2="100" y2="${Y+82}" stroke="${OC.a}" stroke-width="2.5" opacity=".65"/>`;
+      // Arms
+      o+=`<path d="M34 ${Y+20} L16 ${Y+108} Q16 ${Y+128} 28 ${Y+133} Q40 ${Y+128} 42 ${Y+108} L42 ${Y+20}" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.2"/>`;
+      o+=`<path d="M166 ${Y+20} L184 ${Y+108} Q184 ${Y+128} 172 ${Y+133} Q160 ${Y+128} 158 ${Y+108} L158 ${Y+20}" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.2"/>`;
+      // Hands
+      o+=`<ellipse cx="22" cy="${Y+136}" rx="9" ry="11" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+      o+=`<ellipse cx="178" cy="${Y+136}" rx="9" ry="11" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+      break;
+    case'idol':
+      // Top
+      o+=`<path d="M58 ${Y} Q44 ${Y+12} 42 ${Y+54} L52 ${Y+84} L148 ${Y+84} L158 ${Y+54} Q156 ${Y+12} 142 ${Y} Q128 ${Y-9} 100 ${Y-11} Q72 ${Y-9} 58 ${Y}Z" fill="${OC.m}" stroke="${dkn(OC.m,15)}" stroke-width="1.5"/>`;
+      // Ruffle collar
+      o+=`<path d="M72 ${Y+7} Q82 ${Y+28} 100 ${Y+22} Q118 ${Y+28} 128 ${Y+7}" fill="none" stroke="${OC.a}" stroke-width="2.5"/>`;
+      // Skirt flare
+      o+=`<path d="M52 ${Y+82} Q26 ${Y+102} 10 ${Y+164} L190 ${Y+164} Q174 ${Y+102} 148 ${Y+82}Z" fill="${OC.s}" stroke="${dkn(OC.s,15)}" stroke-width="1.2"/>`;
+      // Skirt tier lines
+      o+=`<path d="M16 ${Y+143} Q60 ${Y+133} 100 ${Y+148} Q140 ${Y+133} 184 ${Y+143}" fill="none" stroke="${OC.a}" stroke-width="2.5" opacity=".85"/>`;
+      o+=`<path d="M20 ${Y+158} Q62 ${Y+148} 100 ${Y+162} Q138 ${Y+148} 180 ${Y+158}" fill="none" stroke="${OC.a}" stroke-width="1.8" opacity=".65"/>`;
+      // Sparkles on outfit
+      [['44','52'],['148','47'],['68','108'],['130','118']].forEach(([x,y])=>{
+        o+=`<text x="${x}" y="${Y+parseInt(y)}" font-size="11" fill="${OC.a}" opacity=".88">✦</text>`;
+      });
+      // Arms
+      o+=`<path d="M42 ${Y+10} Q18 ${Y+52} 20 ${Y+95}" stroke="url(#fg${uid})" stroke-width="20" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M158 ${Y+10} Q182 ${Y+52} 180 ${Y+95}" stroke="url(#fg${uid})" stroke-width="20" fill="none" stroke-linecap="round"/>`;
+      // Gloves
+      o+=`<ellipse cx="20" cy="${Y+98}" rx="10" ry="13" fill="${OC.m}" stroke="${dkn(OC.m,15)}" stroke-width="1"/>`;
+      o+=`<ellipse cx="180" cy="${Y+98}" rx="10" ry="13" fill="${OC.m}" stroke="${dkn(OC.m,15)}" stroke-width="1"/>`;
+      break;
+    case'street':
+      // Jacket
+      o+=`<path d="M55 ${Y} Q37 ${Y+12} 35 ${Y+85} L35 ${Y+140} L165 ${Y+140} L165 ${Y+85} Q163 ${Y+12} 145 ${Y} Q131 ${Y-6} 100 ${Y-8} Q69 ${Y-6} 55 ${Y}Z" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.5"/>`;
+      // Lapels
+      o+=`<path d="M87 ${Y-2} L80 ${Y+28} L58 ${Y+7}" fill="${OC.m}" stroke="${OC.s}" stroke-width="1"/>`;
+      o+=`<path d="M113 ${Y-2} L120 ${Y+28} L142 ${Y+7}" fill="${OC.m}" stroke="${OC.s}" stroke-width="1"/>`;
+      // Inner shirt
+      o+=`<rect x="87" y="${Y-3}" width="26" height="145" rx="2" fill="${OC.d}" opacity=".18"/>`;
+      // Logo text
+      o+=`<text x="84" y="${Y+62}" font-size="11" fill="${OC.a}" font-family="sans-serif" font-weight="bold">DEMO</text>`;
+      // Pocket
+      o+=`<rect x="44" y="${Y+47}" width="27" height="22" rx="4" fill="${OC.s}" stroke="${OC.a}" stroke-width="1" opacity=".75"/>`;
+      // Pants
+      o+=`<rect x="48" y="${Y+104}" width="46" height="38" rx="4" fill="${OC.s}" stroke="${OC.m}" stroke-width="1"/>`;
+      o+=`<rect x="106" y="${Y+104}" width="46" height="38" rx="4" fill="${OC.s}" stroke="${OC.m}" stroke-width="1"/>`;
+      o+=`<rect x="48" y="${Y+100}" width="104" height="11" rx="3.5" fill="${OC.a}" stroke="${OC.s}" stroke-width="1"/>`;
+      // Arms
+      o+=`<path d="M35 ${Y+12} L20 ${Y+90} Q20 ${Y+112} 32 ${Y+116}" stroke="${OC.m}" stroke-width="24" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M165 ${Y+12} L180 ${Y+90} Q180 ${Y+112} 168 ${Y+116}" stroke="${OC.m}" stroke-width="24" fill="none" stroke-linecap="round"/>`;
+      o+=`<ellipse cx="26" cy="${Y+119}" rx="8.5" ry="10.5" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+      o+=`<ellipse cx="174" cy="${Y+119}" rx="8.5" ry="10.5" fill="url(#fg${uid})" stroke="${c.skinS}" stroke-width="1"/>`;
+      break;
+    case'gothic':
+      // Corset top
+      o+=`<path d="M60 ${Y} Q44 ${Y+12} 42 ${Y+68} L58 ${Y+84} L142 ${Y+84} L158 ${Y+68} Q156 ${Y+12} 140 ${Y} Q126 ${Y-10} 100 ${Y-12} Q74 ${Y-10} 60 ${Y}Z" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.5"/>`;
+      // Corset lacing
+      for(let i=0;i<5;i++){const ly=Y+16+i*13;o+=`<path d="M88 ${ly} Q94 ${ly-5} 100 ${ly} Q106 ${ly-5} 112 ${ly}" fill="none" stroke="${OC.a}" stroke-width="1.8" opacity=".8"/>`;}
+      // Choker
+      o+=`<rect x="82" y="${Y-22}" width="36" height="12" rx="6" fill="${OC.s}" stroke="${OC.a}" stroke-width="1"/>`;
+      o+=`<circle cx="100" cy="${Y-16}" r="4.5" fill="${OC.a}"/><circle cx="100" cy="${Y-16}" r="2.5" fill="${OC.d}" opacity=".5"/>`;
+      // Multi-layer skirt
+      o+=`<path d="M42 ${Y+82} Q18 ${Y+98} 8 ${Y+164} L192 ${Y+164} Q182 ${Y+98} 158 ${Y+82}Z" fill="${OC.s}" stroke="${dkn(OC.s,10)}" stroke-width="1.2"/>`;
+      o+=`<path d="M42 ${Y+84} Q20 ${Y+100} 10 ${Y+162} L54 ${Y+162} Q46 ${Y+114} 68 ${Y+86}Z" fill="${OC.m}" stroke="${OC.a}" stroke-width=".8" opacity=".8"/>`;
+      o+=`<path d="M158 ${Y+84} Q180 ${Y+100} 190 ${Y+162} L146 ${Y+162} Q154 ${Y+114} 132 ${Y+86}Z" fill="${OC.m}" stroke="${OC.a}" stroke-width=".8" opacity=".8"/>`;
+      o+=`<path d="M8 ${Y+158} Q55 ${Y+150} 100 ${Y+158} Q145 ${Y+150} 192 ${Y+158}" fill="none" stroke="${OC.a}" stroke-width="2" opacity=".6" stroke-dasharray="5,3"/>`;
+      // Arms with lace trim
+      o+=`<path d="M42 ${Y+6} Q18 ${Y+48} 20 ${Y+90}" stroke="${OC.m}" stroke-width="18" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M158 ${Y+6} Q182 ${Y+48} 180 ${Y+90}" stroke="${OC.m}" stroke-width="18" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M20 ${Y+90} Q18 ${Y+110} 20 ${Y+120}" stroke="url(#fg${uid})" stroke-width="14" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M180 ${Y+90} Q182 ${Y+110} 180 ${Y+120}" stroke="url(#fg${uid})" stroke-width="14" fill="none" stroke-linecap="round"/>`;
+      break;
+    case'armor':
+      // Chest plate
+      o+=`<path d="M54 ${Y} Q36 ${Y+9} 34 ${Y+74} L50 ${Y+96} L150 ${Y+96} L166 ${Y+74} Q164 ${Y+9} 146 ${Y} Q132 ${Y-7} 100 ${Y-9} Q68 ${Y-7} 54 ${Y}Z" fill="${OC.m}" stroke="${OC.s}" stroke-width="1.8"/>`;
+      // Armor plate detail
+      o+=`<path d="M64 ${Y+7} Q64 ${Y+59} 75 ${Y+80} L100 ${Y+86} L125 ${Y+80} Q136 ${Y+59} 136 ${Y+7}" fill="${OC.a}" opacity=".22"/>`;
+      o+=`<line x1="100" y1="${Y+7}" x2="100" y2="${Y+86}" stroke="${OC.d}" stroke-width="2.2" opacity=".42"/>`;
+      // Center gem
+      o+=`<polygon points="100,${Y+28} 108,${Y+40} 100,${Y+52} 92,${Y+40}" fill="${OC.a}" filter="url(#sg${uid})" opacity=".9"/>`;
+      o+=`<polygon points="100,${Y+32} 106,${Y+40} 100,${Y+48} 94,${Y+40}" fill="white" opacity=".22"/>`;
+      // Pauldrons
+      o+=`<path d="M34 ${Y} Q16 ${Y+6} 14 ${Y+40} Q16 ${Y+56} 34 ${Y+55} L50 ${Y+44}Z" fill="${OC.s}" stroke="${OC.d}" stroke-width="1.2"/>`;
+      o+=`<path d="M166 ${Y} Q184 ${Y+6} 186 ${Y+40} Q184 ${Y+56} 166 ${Y+55} L150 ${Y+44}Z" fill="${OC.s}" stroke="${OC.d}" stroke-width="1.2"/>`;
+      o+=`<path d="M16 ${Y+12} Q12 ${Y+34} 16 ${Y+50}" stroke="${OC.d}" stroke-width="1.8" fill="none" opacity=".6"/>`;
+      o+=`<path d="M184 ${Y+12} Q188 ${Y+34} 184 ${Y+50}" stroke="${OC.d}" stroke-width="1.8" fill="none" opacity=".6"/>`;
+      // Fauld plates
+      o+=`<path d="M50 ${Y+94} L34 ${Y+148} L166 ${Y+148} L150 ${Y+94}Z" fill="${OC.s}" stroke="${OC.m}" stroke-width="1"/>`;
+      [0,1,2].forEach(i=>{
+        o+=`<rect x="${64+i*30}" y="${Y+98}" width="24" height="38" rx="3.5" fill="${OC.m}" stroke="${OC.d}" stroke-width="1" opacity=".85"/>`;
+        o+=`<rect x="${66+i*30}" y="${Y+100}" width="20" height="2.5" rx="1.2" fill="${OC.d}" opacity=".5"/>`;
+      });
+      // Arms
+      o+=`<path d="M14 ${Y+42} Q8 ${Y+85} 12 ${Y+128}" stroke="${OC.s}" stroke-width="19" fill="none" stroke-linecap="round"/>`;
+      o+=`<path d="M186 ${Y+42} Q192 ${Y+85} 188 ${Y+128}" stroke="${OC.s}" stroke-width="19" fill="none" stroke-linecap="round"/>`;
+      // Gauntlets
+      o+=`<rect x="5" y="${Y+116}" width="21" height="28" rx="7" fill="${OC.m}" stroke="${OC.d}" stroke-width="1.2"/>`;
+      o+=`<rect x="174" y="${Y+116}" width="21" height="28" rx="7" fill="${OC.m}" stroke="${OC.d}" stroke-width="1.2"/>`;
+      break;
+  }
+  return o;
+}
+
+// ─── WEAPON ───
+function drawWeapon(c,OC,outfit,uid){
+  let w='';
+  if(outfit==='armor'){
+    // Glowing sword
+    w+=`<rect x="177" y="282" width="6" height="52" rx="3" fill="${OC.a}" filter="url(#gw${uid})" opacity=".85"/>`;
+    w+=`<polygon points="180,268 174,282 186,282" fill="${OC.a}" filter="url(#gw${uid})" opacity=".85"/>`;
+    w+=`<rect x="174" y="285" width="12" height="5" rx="2.5" fill="${OC.d}" opacity=".9"/>`;
+    w+=`<rect x="179" y="270" width="2" height="16" rx="1" fill="white" opacity=".35"/>`;
+  }else if(outfit==='idol'){
+    // Star wand
+    w+=`<line x1="176" y1="252" x2="185" y2="198" stroke="${OC.d}" stroke-width="3.5" stroke-linecap="round" opacity=".85"/>`;
+    w+=`<circle cx="185" cy="194" r="10" fill="${OC.a}" filter="url(#sg${uid})"/>`;
+    w+=`<text x="179" y="199" font-size="11" fill="white">✦</text>`;
+  }else if(outfit==='gothic'){
+    // Rose
+    w+=`<circle cx="183" cy="254" r="8" fill="#b71c1c"/><ellipse cx="183" cy="254" rx="5" ry="4" fill="#e53935" opacity=".5"/>`;
+    w+=`<line x1="183" y1="262" x2="181" y2="302" stroke="#388e3c" stroke-width="3" stroke-linecap="round" opacity=".9"/>`;
+    w+=`<path d="M178 280 Q175 275 180 272" stroke="#388e3c" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  }else if(outfit==='hunter'){
+    // Dagger
+    w+=`<rect x="19" y="300" width="7" height="38" rx="3.5" fill="${OC.a}" filter="url(#sg${uid})" opacity=".88"/>`;
+    w+=`<polygon points="22.5,290 18,302 27,302" fill="${OC.a}" opacity=".88"/>`;
+    w+=`<rect x="15" y="303" width="15" height="5" rx="2.5" fill="${OC.d}" opacity=".9"/>`;
+  }else if(outfit==='street'){
+    // Energy orb
+    w+=`<circle cx="173" cy="242" r="11" fill="${OC.a}" filter="url(#gw${uid})" opacity=".7"/>`;
+    w+=`<circle cx="173" cy="242" r="6" fill="white" opacity=".4"/>`;
+    w+=`<circle cx="173" cy="242" r="3" fill="white" opacity=".7"/>`;
+  }
+  // Stars floating around character
+  const starPositions=[['14','82'],['182','88'],['16','200'],['184','210'],['92','28'],['108','28']];
+  starPositions.forEach(([x,y])=>{
+    w+=`<text x="${x}" y="${y}" font-size="8" fill="${c.themeL}" opacity="${Math.random()>.5?.65:.45}" filter="url(#sg${uid})">★</text>`;
+  });
+  return w;
+}
+
+// ─── UTILITIES ───
+function ltn(hex,amt){
+  if(!hex||hex[0]!=='#')return'#fff';
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`rgb(${Math.min(255,r+amt)},${Math.min(255,g+amt)},${Math.min(255,b+amt)})`;
+}
+function dkn(hex,amt){
+  if(!hex||hex[0]!=='#')return'#000';
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`rgb(${Math.max(0,r-amt)},${Math.max(0,g-amt)},${Math.max(0,b-amt)})`;
+}
+</script>
+</body>
+</html>
